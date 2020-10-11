@@ -115,9 +115,11 @@ class PolicyService
                     $role = $everybodyRole;
                 } else {
                     $role = new Role($roleIdentifier);
-                    if (isset($roleConfiguration['abstract'])) {
-                        $role->setAbstract((boolean)$roleConfiguration['abstract']);
+                    $role->setAbstract((bool)($roleConfiguration['abstract'] ?? false));
+                    if (isset($roleConfiguration['label'])) {
+                        $role->setLabel((string)$roleConfiguration['label']);
                     }
+                    $role->setDescription((string)($roleConfiguration['description'] ?? ''));
                 }
 
                 if (isset($roleConfiguration['privileges'])) {
@@ -183,6 +185,7 @@ class PolicyService
         if (!isset($this->policyConfiguration['privilegeTargets'])) {
             return;
         }
+
         foreach ($this->policyConfiguration['privilegeTargets'] as $privilegeClassName => $privilegeTargetsConfiguration) {
             foreach ($privilegeTargetsConfiguration as $privilegeTargetIdentifier => $privilegeTargetConfiguration) {
                 if (!isset($privilegeTargetConfiguration['matcher'])) {
@@ -199,7 +202,9 @@ class PolicyService
                     }
                     $parameterDefinitions[$parameterName] = new PrivilegeParameterDefinition($parameterName, $privilegeTargetConfiguration['parameters'][$parameterName]['className']);
                 }
-                $privilegeTarget = new PrivilegeTarget($privilegeTargetIdentifier, $privilegeClassName, $privilegeTargetConfiguration['matcher'], $parameterDefinitions);
+
+                $label = $privilegeTargetConfiguration['label'] ?? $privilegeTargetIdentifier;
+                $privilegeTarget = new PrivilegeTarget($privilegeTargetIdentifier, $privilegeClassName, $privilegeTargetConfiguration['matcher'], $parameterDefinitions, $label);
                 $privilegeTarget->injectObjectManager($this->objectManager);
                 $this->privilegeTargets[$privilegeTargetIdentifier] = $privilegeTarget;
             }
